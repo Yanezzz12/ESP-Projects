@@ -16,6 +16,9 @@ const int blueLedPin = 14;
 const int greenLedPin = 16;
 const int relayPin = 5;
 
+//Variables
+int counter = 0;
+
 void setup() 
 {
   Serial.begin(115200); 
@@ -39,15 +42,18 @@ void setup()
   {
     Serial.print(".");
     Connecting();
+    counter++;
+
+    if(counter > 90)
+      Error();   
   }
-  
+
   Correct();
 
   Serial.println();
   Serial.print("Connected! IP address: ");
   Serial.println(WiFi.localIP());
 
-  //EchoMyz.addDevice("Foco Escritorio", Relay);
   EchoMyz.addDevice("Lampara Escritorio", LightAction);
   EchoMyz.begin();
 
@@ -55,8 +61,19 @@ void setup()
   Correct();
 }
 
+unsigned long previousMillis = 0;
+unsigned long interval = 30000;
 void loop() 
 {
+  unsigned long currentMillis = millis();
+
+  if ((WiFi.status() != WL_CONNECTED) && (currentMillis - previousMillis >=interval))
+  {
+    WiFi.disconnect();
+    WiFi.reconnect();
+    previousMillis = currentMillis;
+  }
+
   EchoMyz.loop();
   delay(1);
 }
@@ -78,7 +95,7 @@ void LightAction(uint8_t brightness)
 void Error()
 {
   short interval = 100;
-  short repetitions = 10;
+  short repetitions = 5;
 
   for(int i = 0; i < repetitions; i++)
   {
@@ -87,25 +104,24 @@ void Error()
     digitalWrite(redLedPin, LOW);
     delay(interval);
   }
+
+  delay(10000);
+  ESP.restart();
 }
 
 void Connecting()
 {
   short interval = 100;
-  short repetitions = 1;
 
-  for(int i = 0; i < repetitions; i++)
-  {
-    digitalWrite(blueLedPin, HIGH);
-    delay(interval);
-    digitalWrite(blueLedPin, LOW);
-    delay(interval);
-  }
+  digitalWrite(blueLedPin, HIGH);
+  delay(interval);
+  digitalWrite(blueLedPin, LOW);
+  delay(interval);
 }
 
 void Action()
 {
-  short interval = 100;
+  short interval = 70;
   short repetitions = 2;
 
   for(int i = 0; i < repetitions; i++)
@@ -119,7 +135,7 @@ void Action()
 
 void Correct()
 {
-  short interval = 450;
+  short interval = 100;
   short repetitions = 3;
 
   for(int i = 0; i < repetitions; i++)
